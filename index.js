@@ -8,6 +8,7 @@ const Users = require('./database/model/Users');
 const Rooms = require('./database/model/Rooms');
 const Inboxs = require('./database/model/Inboxs');
 const Messages = require('./database/model/Messages');
+const { sendMail } = require('./sendEmail');
 const port = process.env.PORT || 5000;
 
 const app = express();
@@ -128,6 +129,53 @@ app.post('/api/users', (req, res) => {
                 });
             });
             break;
+        case 'checkEmail':
+            Users.findOne({ email: data, provider: 'email/pwd' })
+                .then((user) => {
+                    if (user) {
+                        global.privateKey = req.body.id;
+                        global.time = setTimeout(() => {
+                            global.privateKey = null;
+                        }, 36000000);
+                        sendMail(privateKey, user.email).then(() => {
+                            res.status(200).json(user._id);
+                        });
+                    } else {
+                        res.status(300).json();
+                    }
+                })
+                .catch((err) => {
+                    console.log(err);
+                    res.status(500).json();
+                });
+            break;
+        case 'resetPWD':
+            if (data.code === privateKey) {
+                clearTimeout(time);
+                bcrypt
+                    .hash(data.newPass, 10)
+                    .then((pwdHash) => {
+                        Users.findByIdAndUpdate(data.emailCode, { password: pwdHash })
+                            .then((user) => {
+                                res.status(200).json();
+                                privateKey = null;
+                            })
+                            .catch((err) => {
+                                console.log(err);
+                                res.status(500).json();
+                            });
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                        res.status(500).json();
+                        0;
+                    });
+            } else if (data.code !== privateKey) {
+                res.status(300).json();
+            } else if (!privateKey) {
+                res.status(301).json();
+            }
+            break;
         default:
             throw new Error('Invalid action: ' + action);
     }
@@ -158,9 +206,7 @@ app.post('/api/rooms', (req, res) => {
                 });
             break;
         case 'changeBGR':
-            const newData = data.newImg
-                ? { background: data.background, $addToSet: { backgroundList: data.newImg } }
-                : { background: data.background };
+            const newData = { background: data.newImg, $addToSet: { backgroundList: data.newImg } };
             Rooms.findByIdAndUpdate(data.id, { ...newData, lastested: Date.now() })
                 .then(() => {
                     res.status(200).json();
@@ -228,9 +274,7 @@ app.post('/api/inboxs', (req, res) => {
                 .catch((err) => res.status(500).json());
             break;
         case 'changeBGR':
-            const newData = data.newImg
-                ? { background: data.background, $addToSet: { backgroundList: data.newImg } }
-                : { background: data.background };
+            const newData = { background: data.newImg, $addToSet: { backgroundList: data.newImg } };
             Inboxs.findByIdAndUpdate(data.id, { ...newData, lastested: Date.now() })
                 .then(() => {
                     res.status(200).json();
@@ -369,6 +413,12 @@ app.post('/api/messages', (req, res) => {
             newMsg.save((err) => {
                 if (err) return res.status(500).json();
                 res.status(200).json(newMsg);
+            });
+            Promise.all([
+                Rooms.findByIdAndUpdate(data.foreignId, { lastested: Date.now() }),
+                Inboxs.findByIdAndUpdate(data.foreignId, { lastested: Date.now() }),
+            ]).catch((err) => {
+                console.log(err);
             });
             break;
         default:
