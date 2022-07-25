@@ -459,26 +459,59 @@ io.on('connection', (socket) => {
     socket.on('join_room', (data) => {
         socket.join(data);
     });
+
     socket.on('out_room', (data) => {
         socket.leave(data.room);
         socket.to(data.room).emit('user_outRoom', data);
     });
+
     socket.on('addUser_room', (data) => {
         const sendUserSocket = onlineUsers.get(data.to);
         if (sendUserSocket) {
             socket.to(sendUserSocket).emit('recive_newRoom', data.room);
         }
     });
+
     socket.on('send_message-toUsers', (data) => {
         const sendUserSocket = onlineUsers.get(data.to);
         if (sendUserSocket) {
             socket.to(sendUserSocket).emit('recive_userMsg', data.newInbox);
         }
     });
+
     socket.on('send_message-toRoom', (data) => {
         // const sendUserSocket = onlineUsers.get(data.to);
         socket.to(data.to).emit('recive_msg', data.msg);
     });
+
+    socket.on('calling_user', ({ to, from, name }) => {
+        const sendUserSocket = onlineUsers.get(to);
+        if (sendUserSocket) {
+            socket.to(sendUserSocket).emit('send_call', { from, name });
+        }
+    });
+
+    socket.on('answer_call', ({ id, mess }) => {
+        const sendUserSocket = onlineUsers.get(id);
+        if (sendUserSocket) {
+            socket.to(sendUserSocket).emit('revice_answerCall', mess);
+        }
+    });
+
+    socket.on('send_offer', ({ to, offer }) => {
+        const sendUserSocket = onlineUsers.get(to);
+        if (sendUserSocket) {
+            socket.to(sendUserSocket).emit('revice_offer', offer);
+        }
+    });
+
+    socket.on('send_answer', ({ to, answer }) => {
+        const sendUserSocket = onlineUsers.get(to);
+        if (sendUserSocket) {
+            socket.to(sendUserSocket).emit('revice_answer', answer);
+        }
+    });
+
     socket.on('disconnect', (reason) => {
         if (reason === 'io server disconnect') {
             // the disconnection was initiated by the server, you need to reconnect manually
