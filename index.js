@@ -498,17 +498,11 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('send_offer', ({ to, offer }) => {
+    socket.on('send_signal', ({ to, signal }) => {
         const sendUserSocket = onlineUsers.get(to);
         if (sendUserSocket) {
-            socket.to(sendUserSocket).emit('revice_offer', offer);
-        }
-    });
-
-    socket.on('send_answer', ({ to, answer }) => {
-        const sendUserSocket = onlineUsers.get(to);
-        if (sendUserSocket) {
-            socket.to(sendUserSocket).emit('revice_answer', answer);
+            console.log(sendUserSocket);
+            socket.to(sendUserSocket).emit('revice_signal', signal);
         }
     });
 
