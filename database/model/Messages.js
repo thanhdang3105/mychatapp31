@@ -12,12 +12,16 @@ const Messages = new Schema({
         required: true,
     },
     text: {
-        type: String,
+        type: mongoose.Mixed,
         required: true,
     },
     createdAt: {
         type: Date,
         default: Date.now(),
+    },
+    type: {
+        type: String,
+        default: 'text',
     },
 });
 

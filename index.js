@@ -22,6 +22,10 @@ app.use(
 
 connectDB();
 
+app.get('/', (req, res) => {
+    res.send('Chào bạn đây là server của My Chat App được viết bởi Thanh Đặng');
+});
+
 app.post('/api/users', (req, res) => {
     const { action, data } = req.body;
     switch (action) {
