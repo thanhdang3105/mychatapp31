@@ -475,6 +475,7 @@ io.on('connection', (socket) => {
     socket.on('send_message-toUsers', (data) => {
         const sendUserSocket = onlineUsers.get(data.to);
         if (sendUserSocket) {
+            socket.join(data.newInbox._id);
             socket.to(sendUserSocket).emit('recive_userMsg', data.newInbox);
         }
     });
@@ -484,10 +485,12 @@ io.on('connection', (socket) => {
         socket.to(data.to).emit('recive_msg', data.msg);
     });
 
-    socket.on('calling_user', ({ to, from, name }) => {
+    socket.on('calling_user', ({ to, from, name }, callback) => {
         const sendUserSocket = onlineUsers.get(to);
         if (sendUserSocket) {
             socket.to(sendUserSocket).emit('send_call', { from, name });
+        } else {
+            callback('Người dùng không trực tuyến');
         }
     });
 
@@ -501,7 +504,6 @@ io.on('connection', (socket) => {
     socket.on('send_signal', ({ to, signal }) => {
         const sendUserSocket = onlineUsers.get(to);
         if (sendUserSocket) {
-            console.log(sendUserSocket);
             socket.to(sendUserSocket).emit('revice_signal', signal);
         }
     });
