@@ -309,7 +309,6 @@ app.get('/api/database', (req, res) => {
                     { $replaceRoot: { newRoot: { $mergeObjects: [{ $arrayElemAt: ['$user', 0] }, '$$ROOT'] } } },
                     {
                         $project: {
-                            _id: 0,
                             user: 0,
                             updatedAt: 0,
                             provider: 0,
@@ -376,7 +375,6 @@ app.get('/api/database', (req, res) => {
                         { $replaceRoot: { newRoot: { $mergeObjects: [{ $arrayElemAt: ['$user', 0] }, '$$ROOT'] } } },
                         {
                             $project: {
-                                _id: 0,
                                 user: 0,
                                 updatedAt: 0,
                                 provider: 0,
