@@ -19,6 +19,10 @@ const Messages = new Schema({
         type: Date,
         default: Date.now(),
     },
+    removed: {
+        type: Boolean,
+        default: false,
+    },
     type: {
         type: String,
         default: 'text',

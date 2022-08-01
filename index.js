@@ -313,7 +313,6 @@ app.get('/api/database', (req, res) => {
                             updatedAt: 0,
                             provider: 0,
                             password: 0,
-                            foreignId: 0,
                         },
                     },
                 ],
@@ -379,7 +378,6 @@ app.get('/api/database', (req, res) => {
                                 updatedAt: 0,
                                 provider: 0,
                                 password: 0,
-                                foreignId: 0,
                             },
                         },
                     ],
@@ -422,6 +420,16 @@ app.post('/api/messages', (req, res) => {
             ]).catch((err) => {
                 console.log(err);
             });
+            break;
+        case 'remove':
+            Messages.findByIdAndUpdate(data, { removed: true })
+                .then(() => {
+                    res.status(200).json();
+                })
+                .catch((err) => {
+                    console.log(err);
+                    res.status(500).json();
+                });
             break;
         default:
             throw new Error('Invalid action: ' + action);
@@ -485,6 +493,10 @@ io.on('connection', (socket) => {
     socket.on('send_message-toRoom', (data) => {
         // const sendUserSocket = onlineUsers.get(data.to);
         socket.to(data.to).emit('recive_msg', data.msg);
+    });
+
+    socket.on('removeMsg', ({ to, data }) => {
+        socket.to(to).emit('msgRemoved', { idRoom: to, idMsg: data });
     });
 
     socket.on('calling_user', ({ to, from, name }, callback) => {
